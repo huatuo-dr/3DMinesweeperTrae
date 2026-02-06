@@ -58,7 +58,7 @@ git push
 
 设置保存后，GitHub Pages 页面顶部会显示类似如下的提示：
 
-> Your site is live at `https://<你的用户名>.github.io/3Dminesweeper/`
+> Your site is live at `https://<你的用户名>.github.io/3DMinesweeperTrae/`
 
 点击该链接，即可开始游玩你的 3D 扫雷游戏！
 
@@ -66,7 +66,7 @@ git push
 
 **Q: 打开页面是空白的？**
 A: 
-1. 检查 `vite.config.ts` 中的 `base` 配置是否正确。默认为 `/3Dminesweeper/`，这要求你的 GitHub 仓库名必须是 `3Dminesweeper`。如果你的仓库名不同，请修改 `base` 为 `/你的仓库名/`。
+1. 检查 `vite.config.ts` 中的 `base` 配置是否正确。默认为 `/3DMinesweeperTrae/`，这要求你的 GitHub 仓库名必须是 `3DMinesweeperTrae`。如果你的仓库名不同，请修改 `base` 为 `/你的仓库名/`。
 2. 确保在 GitHub Pages 设置中选择了正确的分支 (`gh-pages`)。
 
 **Q: 刷新页面出现 404 错误？**
