@@ -81,8 +81,8 @@ export default function Home() {
           
           <input
             type="range"
-            min="1"
-            max="99"
+            min="10"
+            max="30"
             value={density}
             onChange={(e) => setDensity(parseInt(e.target.value))}
             className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
@@ -92,6 +92,7 @@ export default function Home() {
             <span>Medium (15%)</span>
             <span>Hard (20%)</span>
             <span>Extreme (25%)</span>
+            <span>Hell (30%)</span>
           </div>
         </div>
 
