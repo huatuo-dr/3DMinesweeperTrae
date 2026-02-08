@@ -17,11 +17,16 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
   const { revealCell, toggleFlag } = useGameStore();
   const lastTapRef = useRef<number>(0);
   const tapTimeoutRef = useRef<number | null>(null);
+  const lastPointerUpRef = useRef<number>(0);
+  const mouseDownAtRef = useRef<number>(0);
+  const mouseLastUpRef = useRef<number>(0);
+  const mouseRevealTimerRef = useRef<number | null>(null);
 
   const handleContextMenu = (e: any) => {
     e.stopPropagation();
-    // e.nativeEvent.preventDefault() is handled by canvas usually but let's be safe
-    toggleFlag(cell.id);
+    if (e.nativeEvent && typeof e.nativeEvent.preventDefault === 'function') {
+      e.nativeEvent.preventDefault();
+    }
   };
 
   const handlePointerDown = (e: any) => {
@@ -30,27 +35,69 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
       if (e.nativeEvent && typeof e.nativeEvent.preventDefault === 'function') {
         e.nativeEvent.preventDefault();
       }
+      // start a tentative single-tap reveal timer; will be canceled if double-tap detected on pointerup
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+      tapTimeoutRef.current = window.setTimeout(() => {
+        revealCell(cell.id);
+        tapTimeoutRef.current = null;
+      }, 380);
+    } else {
+      if (e.button === 2) {
+        toggleFlag(cell.id);
+      } else if (e.button === 0) {
+        mouseDownAtRef.current = performance.now();
+      }
+    }
+  };
+  
+  const handlePointerUp = (e: any) => {
+    e.stopPropagation();
+    if (e.pointerType === 'touch') {
       const now = performance.now();
-      if (now - lastTapRef.current < 300) {
+      if (now - lastPointerUpRef.current < 400) {
         if (tapTimeoutRef.current) {
           clearTimeout(tapTimeoutRef.current);
           tapTimeoutRef.current = null;
         }
         toggleFlag(cell.id);
-        lastTapRef.current = 0;
+        lastPointerUpRef.current = 0;
       } else {
-        lastTapRef.current = now;
-        tapTimeoutRef.current = window.setTimeout(() => {
-          revealCell(cell.id);
-          tapTimeoutRef.current = null;
-          lastTapRef.current = 0;
-        }, 280);
+        lastPointerUpRef.current = now;
+        // keep the reveal timer set in pointerdown
       }
     } else {
-      if (e.button === 2) {
-        toggleFlag(cell.id);
-      } else if (e.button === 0) {
-        revealCell(cell.id);
+      const now = performance.now();
+      const duration = now - mouseDownAtRef.current;
+      if (e.button === 0) {
+        if (duration > 500) {
+          if (mouseRevealTimerRef.current) {
+            clearTimeout(mouseRevealTimerRef.current);
+            mouseRevealTimerRef.current = null;
+          }
+          mouseLastUpRef.current = now;
+          return;
+        }
+        if (now - mouseLastUpRef.current < 300) {
+          if (mouseRevealTimerRef.current) {
+            clearTimeout(mouseRevealTimerRef.current);
+            mouseRevealTimerRef.current = null;
+          }
+          toggleFlag(cell.id);
+          mouseLastUpRef.current = 0;
+        } else {
+          mouseLastUpRef.current = now;
+          if (mouseRevealTimerRef.current) {
+            clearTimeout(mouseRevealTimerRef.current);
+            mouseRevealTimerRef.current = null;
+          }
+          mouseRevealTimerRef.current = window.setTimeout(() => {
+            revealCell(cell.id);
+            mouseRevealTimerRef.current = null;
+          }, 280);
+        }
       }
     }
   };
@@ -123,6 +170,7 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
         ref={meshRef}
         position={[0, 0, meshZ]}
         onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
         onContextMenu={handleContextMenu}
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); }}
         onPointerOut={(e) => { e.stopPropagation(); setHover(false); }}

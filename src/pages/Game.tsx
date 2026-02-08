@@ -34,7 +34,7 @@ export default function Game() {
     <div className="w-full h-screen bg-slate-900 relative">
       <GameHUD />
       
-      <Canvas camera={{ position: [0, 0, 4] }} shadows>
+      <Canvas camera={{ position: [0, 0, 4] }} shadows style={{ touchAction: 'none' }}>
         <ambientLight intensity={1} />
         <pointLight position={[10, 10, 10]} intensity={1.5} castShadow />
         {/* Environment component was causing crash due to fetch error. Removing it for now. */}
