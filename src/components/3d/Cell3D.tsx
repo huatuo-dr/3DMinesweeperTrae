@@ -15,6 +15,8 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHover] = useState(false);
   const { revealCell, toggleFlag } = useGameStore();
+  const lastTapRef = useRef<number>(0);
+  const tapTimeoutRef = useRef<number | null>(null);
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -29,6 +31,28 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
     e.stopPropagation();
     // e.nativeEvent.preventDefault() is handled by canvas usually but let's be safe
     toggleFlag(cell.id);
+  };
+
+  const handlePointerDown = (e: any) => {
+    if (e.pointerType === 'touch') {
+      e.stopPropagation();
+      const now = performance.now();
+      if (now - lastTapRef.current < 300) {
+        if (tapTimeoutRef.current) {
+          clearTimeout(tapTimeoutRef.current);
+          tapTimeoutRef.current = null;
+        }
+        toggleFlag(cell.id);
+        lastTapRef.current = 0;
+      } else {
+        lastTapRef.current = now;
+        tapTimeoutRef.current = window.setTimeout(() => {
+          revealCell(cell.id);
+          tapTimeoutRef.current = null;
+          lastTapRef.current = 0;
+        }, 280);
+      }
+    }
   };
 
   // Orientation
@@ -98,6 +122,7 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
       <mesh
         ref={meshRef}
         position={[0, 0, meshZ]}
+        onPointerDown={handlePointerDown}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); }}
