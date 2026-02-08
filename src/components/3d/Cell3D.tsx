@@ -18,15 +18,6 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
   const lastTapRef = useRef<number>(0);
   const tapTimeoutRef = useRef<number | null>(null);
 
-  const handleClick = (e: any) => {
-    e.stopPropagation();
-    if (e.button === 2) {
-      toggleFlag(cell.id);
-    } else {
-      revealCell(cell.id);
-    }
-  };
-
   const handleContextMenu = (e: any) => {
     e.stopPropagation();
     // e.nativeEvent.preventDefault() is handled by canvas usually but let's be safe
@@ -34,8 +25,11 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
   };
 
   const handlePointerDown = (e: any) => {
+    e.stopPropagation();
     if (e.pointerType === 'touch') {
-      e.stopPropagation();
+      if (e.nativeEvent && typeof e.nativeEvent.preventDefault === 'function') {
+        e.nativeEvent.preventDefault();
+      }
       const now = performance.now();
       if (now - lastTapRef.current < 300) {
         if (tapTimeoutRef.current) {
@@ -51,6 +45,12 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
           tapTimeoutRef.current = null;
           lastTapRef.current = 0;
         }, 280);
+      }
+    } else {
+      if (e.button === 2) {
+        toggleFlag(cell.id);
+      } else if (e.button === 0) {
+        revealCell(cell.id);
       }
     }
   };
@@ -123,7 +123,6 @@ export default function Cell3D({ cell, size = 1 }: Cell3DProps) {
         ref={meshRef}
         position={[0, 0, meshZ]}
         onPointerDown={handlePointerDown}
-        onClick={handleClick}
         onContextMenu={handleContextMenu}
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); }}
         onPointerOut={(e) => { e.stopPropagation(); setHover(false); }}
